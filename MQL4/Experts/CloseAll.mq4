@@ -64,7 +64,7 @@ void CloseAll() {
    
             if( OrderType() == OP_BUY  ) t = OrderClose( OrderTicket(), OrderLots(), Bids, 3 ) ;
             if( OrderType() == OP_SELL ) t = OrderClose( OrderTicket(), OrderLots(), Asks, 3 ) ;
-            else if( OrderType() == OP_BUYLIMIT || OrderType() == OP_BUYSTOP || OrderType() == OP_SELLLIMIT || OrderType() == OP_SELLSTOP ) t = OrderDelete( OrderTicket() ) ;
+            if( OrderType() == OP_BUYLIMIT || OrderType() == OP_BUYSTOP || OrderType() == OP_SELLLIMIT || OrderType() == OP_SELLSTOP ) t = OrderDelete( OrderTicket() ) ;
          }//end if
       }//end for
    }//end for
