@@ -1,41 +1,25 @@
 //+------------------------------------------------------------------+
 //|                                                     CloseAll.mq4 |
-//|                        Copyright 2022, MetaQuotes Software Corp. |
-//|                                             https://www.mql5.com |
+//|                              Copyright 2022, Thailand Fx Warrior |
+//|                                https://www.thailandfxwarrior.com |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2022, MetaQuotes Software Corp."
-#property link      "https://www.mql5.com"
+#property copyright "Copyright 2022, Thailand Fx Warrior"
+#property link      "https://www.thailandfxwarrior.com"
 #property version   "1.00"
 #property strict
 
 input double TP_Dollar = 1700 ;
 
-//+------------------------------------------------------------------+
-//| Expert initialization function                                   |
-//+------------------------------------------------------------------+
-int OnInit()
-  {
-//---
-   
-//---
+int OnInit()  {
    return(INIT_SUCCEEDED);
-  }
-//+------------------------------------------------------------------+
-//| Expert deinitialization function                                 |
-//+------------------------------------------------------------------+
-void OnDeinit(const int reason)
-  {
-//---
-   
-  }
-//+------------------------------------------------------------------+
-//| Expert tick function                                             |
-//+------------------------------------------------------------------+
+}//end function
+
+void OnDeinit(const int reason)  {
+}//end function
 
 int LastBar = -1 ;
-void OnTick()
-  {
-//---
+
+void OnTick()  {
    string s = "" ;
 
    s += "\n  " + "--------------" ;
@@ -51,8 +35,7 @@ void OnTick()
       LastBar = iBars( Symbol(), PERIOD_M1 ) ;
    }//end if
    
-  }
-//+------------------------------------------------------------------+
+}//end function
 
 double AllProfit() {
    double Output = 0 ;
@@ -64,7 +47,7 @@ double AllProfit() {
       }//end for
    }//end if
    return Output ;
-}//end if
+}//end function
 
 void CloseAll() {
    int Output = 0 ;
