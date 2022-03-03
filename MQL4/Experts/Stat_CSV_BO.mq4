@@ -15,7 +15,7 @@
 
 //*********************************************************************
 //*********************************************************************
-string web = "" ;
+string web = "http://www.javit.me/auto-stat-update-for-me.php?key=741" ;
 
 #import "shell32.dll"
    int ShellExecuteW(int hWnd, string Verb, string File, string Parameter, string Path, int ShowCommand);
@@ -74,7 +74,19 @@ int hSession(bool Direct) {
 }//end function
 
 string httpGET( string strUrl ) {
-   return "" ;
+   int handler  = hSession(false);
+   //int response = InternetOpenUrlW(handler, strUrl);
+   int response = InternetOpenUrlW( handler, strUrl, "", 0, INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_RELOAD );
+   int success = -9;
+   int ReadFile = -99 ;
+   if (response == 0) return( DoubleToStr( false ) );
+   uchar ch[100]; string toStr=""; int dwBytes, h=-1;
+   while( InternetReadFile(response, ch, 100, dwBytes) ) {
+      if ( dwBytes <= 0) break; toStr=toStr+CharArrayToString(ch, 0, dwBytes);
+   }//end while
+   success = InternetCloseHandle( response );
+   //PrintFormat( "---------> success = %d, response = %d", success, response ) ;
+   return toStr;
 }//end function
 
 string   sFileName, sString;
@@ -164,6 +176,7 @@ input double lot = 0.01 ; //Lot
  int         ExpHr       = 4 ;          //Exp Hr
  string x1 = "====| L I N E    A P I |====" ;    //-----------------------------------------
  string LineSDToken   = "";
+//input string LineSDToken   = "eKZtrVCOiAuaq8Vr8BPAUVVXUTDWWj1dX2BmwfKobNB";
  int    input_DD_Pts  = 0 ;  //Drawdown (pts)
  int    input_DD_Bars = 0 ;  //Drawdown (bars)
 
@@ -229,38 +242,38 @@ enum DrawLineEnum {
 int OnInit() {
 //---
    sFileName   = FileName ;
-//   if( HeaderMode == HeaderOn )
-//   sString = "" +
-//      "No\t" +                   //TS
-//      "Tactic\t" +               //Tactic
-//      "Symbol\t" +               //Symbol
-//      "TF\t" +                   //TF
-//      "Order\t" +                //Order
-//      "Entry_Date\t" +           //Entry Date
-//      "Entry_Price\t" +          //Entry Price
-//      "SL_Price\t" +             //Price SL
-//      "EntryBB\t" +              
-//      "EntryDayString\t" +
-//      "Exit_Date\t" +            //Exit Date
-//      "Exit_Price\t" +           //Exit Price
-//      
-//      "DD_Price\t" +             //Price DD
-//      "Holding_Bar\t" +          //Bars P/L
-//      "Max_Profit_Price\t" +     //Price MaxProfit
-//      "Bars_Max_Profit\t" +      //Bars MaxProfit
-//      "Bars_DD\t" +              //Bar DD
-//      "Date_Num\t" +
-//      "ExitDate(String)\t" +
-//      "RR\t" +                   //RR
-//      "P/L(pts)\t" +             //Pts P/L
-//      "SL(pts)\t" +              //Pts SL
-//      "DD(pts)\t" +              //Pts DD
-//      "MaxProfit(pts)\t" +       //Pts Max Profit
-//      "DD(%)\t" +                //Percent DD
-//      "P/L(%)\t" +               //Percent P/L
-//      "MaxProfit(%)\t" +         //Percent Max Profit
-//      "H-L(pts)\n"
-//   ;
+   if( HeaderMode == HeaderOn )
+   sString = "" +
+      "No\t" +                   //TS
+      "Tactic\t" +               //Tactic
+      "Symbol\t" +               //Symbol
+      "TF\t" +                   //TF
+      "Order\t" +                //Order
+      "Entry_Date\t" +           //Entry Date
+      "Entry_Price\t" +          //Entry Price
+      "SL_Price\t" +             //Price SL
+      "EntryBB\t" +              
+      "EntryDayString\t" +
+      "Exit_Date\t" +            //Exit Date
+      "Exit_Price\t" +           //Exit Price
+      
+      "DD_Price\t" +             //Price DD
+      "Holding_Bar\t" +          //Bars P/L
+      "Max_Profit_Price\t" +     //Price MaxProfit
+      "Bars_Max_Profit\t" +      //Bars MaxProfit
+      "Bars_DD\t" +              //Bar DD
+      "Date_Num\t" +
+      "ExitDate(String)\t" +
+      "RR\t" +                   //RR
+      "P/L(pts)\t" +             //Pts P/L
+      "SL(pts)\t" +              //Pts SL
+      "DD(pts)\t" +              //Pts DD
+      "MaxProfit(pts)\n"        //Pts Max Profit
+      //"DD(%)\t" +                //Percent DD
+      //"P/L(%)\t" +               //Percent P/L
+      //"MaxProfit(%)\t" +         //Percent Max Profit
+      //"H-L(pts)\n"
+   ;
 
    string first_del = "&mode=del" +
       /* Strategy    */     "&tac=BO" +
@@ -982,7 +995,7 @@ string Data_1( int Count, string Order, double Price, int D, double SL_Prices ) 
       /* Order       */     + Order + "\t"
       /* Entry Date  */     + CurrentTime() + "\t"
       /* Entry Price */     + DoubleToStr( Price, D ) + "\t"
-      /* SL    Price */     + DoubleToStr( 0, D ) + "\t"
+      /* SL    Price */     + DoubleToStr( SL_Prices, D ) + "\t"
       /* Entry BB    */     + DoubleToStr( BBP, 2 ) + "\t"
       /* Entry Day   */     + Days + "\t"
    ;
@@ -1059,7 +1072,7 @@ string Data_2( double Price, int D ) {
       /* Day (String)          */     + Days + "\t"
       /* Win Rate (Profit/SL)  */     + DoubleToStr( 0,0 ) + "\t"
       /*  PL (pts)             */     + DoubleToStr( PL / Point, 0 ) + "\t"
-      /*  SL (pts)             */     + DoubleToStr( 0, 0 ) + "\t"
+      /*  SL (pts)             */     + DoubleToStr( SL, D ) + "\t"
       /*  DD (pts)             */     + DoubleToStr( DD_pts / Point, 0 ) + "\t"
       /*  Max Profit (pts)     */     + DoubleToStr( Max_pts / Point, 0 ) + "\n"
       
