@@ -7,32 +7,17 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 #property strict
-//+------------------------------------------------------------------+
-//| Expert initialization function                                   |
-//+------------------------------------------------------------------+
-int OnInit()
-  {
-//---
-   
-//---
+
+int OnInit() {
    return(INIT_SUCCEEDED);
-  }
-//+------------------------------------------------------------------+
-//| Expert deinitialization function                                 |
-//+------------------------------------------------------------------+
-void OnDeinit(const int reason)
-  {
+}//end function
+void OnDeinit(const int reason)  {
 //---
    
-  }
-//+------------------------------------------------------------------+
-//| Expert tick function                                             |
-//+------------------------------------------------------------------+
+}//end function
+
 int LastOrder = -1 ;
-void OnTick()
-  {
-//---
-   
+void OnTick()  {
    double ATR = 0 ;
    double TP = 0 ;
    double SL = 0 ;
@@ -60,5 +45,5 @@ void OnTick()
       LastOrder = OrdersTotal() ;
    }//end if
    
-  }
-//+------------------------------------------------------------------+
+}//end function
+
