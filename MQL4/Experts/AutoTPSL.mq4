@@ -42,7 +42,7 @@ void OnTick()
    if( LastOrder != OrdersTotal() && OrdersTotal() > 0 ) {
       for( i = 0 ; i < OrdersTotal() ; i++ ) {
          if( OrderSelect( i, SELECT_BY_POS, MODE_TRADES ) ) {
-            if( OrderStopLoss() == 0 || OrderTakeProfit() == 0 ) {
+            if( ( OrderStopLoss() == 0 || OrderTakeProfit() == 0 ) && OrderMagicNumber() == 0 ) {
                ATR = iATR( OrderSymbol(), PERIOD_H1, 14, 1 ) ;
                
                if( OrderType() == OP_BUY || OrderType() == OP_BUYLIMIT || OrderType() == OP_BUYSTOP ) {
