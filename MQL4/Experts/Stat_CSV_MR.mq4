@@ -1,11 +1,17 @@
 //+------------------------------------------------------------------+
-//|                              Copyright 2020, Thailand Fx Warrior |
-//|                                 http://www.thailandfxwarrior.com |
+//|                                                  Stat_CSV_MR.mq4 |
+//|                              Copyright 2022, Thailand Fx Warrior |
+//|                                https://www.thailandfxwarrior.com |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2020, Thailand Fx Warrior"
+#property copyright "Copyright 2022, Thailand Fx Warrior"
 #property link      "https://www.thailandfxwarrior.com"
 #property version   "1.00"
 #property strict
+
+
+#import "shell32.dll"   // MQL4-syntax-wrapper-Bo[#import]Container caller-side interface to DLL
+int ShellExecuteW( int  hWnd, int lpVerb, string lpFile, int lpParameters, int lpDirectory, int nCmdShow );
+#import                 // MQL4-syntax-wrapper-Eo[#import]Container
 
 string EA_Name = "MR_" ;
 
@@ -19,7 +25,7 @@ input int    BB_Period = 110 ;
 input double BB_SD     = 2.5 ;
 
 input string x3 = "====| F I L E |====" ;    //-----------------------------------------
-input string      f_input     = "tr";              // ----| File Name
+ string      f_input     = "MR";              // ----| File Name
 string FileName = Symbol() + "_" + f_input + "_" + IntegerToString( Period() ) + "min" + ".csv" ;
 
 enum LineAlertEnum {
@@ -34,34 +40,34 @@ enum DrawLineEnum {
    DrawOff ,   //Off
    DrawOn  ,   //On
 } ;
-input DrawLineEnum DrawMode = DrawOff ;         //
+ DrawLineEnum DrawMode = DrawOff ;         //
 
 enum HeaderEnum {
    HeaderOff ,    //Off
    HeaderOn  ,    //On
 } ;
-input HeaderEnum HeaderMode = HeaderOn ; //Header Mode (On/Off)
+ HeaderEnum HeaderMode = HeaderOn ; //Header Mode (On/Off)
 
 enum ExitTypeEnum {
    ExitBidAsk ,      //Bid / Ask
    ExitHighLow  ,    //High / Low
 } ;
-input ExitTypeEnum ExitType = ExitHighLow ; //Exit Type
+ ExitTypeEnum ExitType = ExitHighLow ; //Exit Type
 
 enum CaptureEnum {
    CaptureOff ,   //Off
    CaptureOn  ,   //On
 } ;
-input CaptureEnum CaltureMode = CaptureOff ;    //Capture Mode (On/Off)
+ CaptureEnum CaltureMode = CaptureOff ;    //Capture Mode (On/Off)
 
 enum CloseEnum {
    CloseBy1SD ,   //1SD
    CloseByMean ,  //Mean
 } ;
-input CloseEnum CloseMode = CloseBy1SD ; //Exit Order Method
+input CloseEnum CloseMode = CloseByMean ; //Exit Order Method
 
-input int s_width = 600 ;  // Capture - Width
-input int s_high  = 400 ;  // Capture - High
+ int s_width = 600 ;  // Capture - Width
+ int s_high  = 400 ;  // Capture - High
 
 int OnInit() {
 //---
@@ -87,6 +93,21 @@ void OnDeinit(const int reason) {
    }//end if
    
    fnWriteFile() ;
+   
+   Sleep( 200 ) ;
+   
+   string Path = __PATH__ ;
+   string StatWeb = "https://docs.google.com/spreadsheets/d/1nv7g1Pvihi8KCgqFDdBG4mH7fE5M1Puux13Zj7iBjN8/edit#gid=0" ;
+   
+   StringReplace( Path, __FILE__, "" ) ;
+   StringReplace( Path, "MQL4\\Experts\\", "" ) ;
+   StringReplace( Path, "ThailandFxWarrior\\", "" ) ;
+   StringReplace( Path, "trader_tum\\", "" ) ;
+   //ShellExecuteW( 0, "open", "notepad.exe " + Path + "tester\\files\\" + FileName, "", "", 1 );
+   ShellExecuteW( 0, "edit", "" + Path + "tester\\files\\" + FileName, "", "", 1 );
+   //ShellExecuteW( 0, "open", "start chrome " + StatWeb, "", "", 1 );
+   
+   //Print( "notepad.exe " + Path + "tester\\files\\" + FileName ) ;
 }//end function
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
@@ -129,7 +150,6 @@ double Order_Price = 0 ;
 
 int step = 1 ;
 void OnTick() {
-   //MarkSto() ;
    EntryAndExit() ;
    MarkBars() ;   
 }//end function
@@ -242,14 +262,7 @@ void EntryAndExit() {
       
       if( Signal == "Buy" && OrdersTotal() == 0 ) {
          ticket = Buy() ;
-         if( LineAlertMode == AlertOn ) {
-            LineAlert( LineSDToken, Symbol() + "\n"
-               + "MR - BUY\n\n"
-               //+ "DD = " + IntegerToString( input_DD_Pts ) + " pts\n"
-               //+ "DD bar = " + IntegerToString( input_DD_Bars ) + " bars"
-            ) ;
-         }//end if
-         
+        
          if( ticket != 0 ) {
             OrderCount++ ;
             CurrentOrder = "Buy" ;
@@ -257,7 +270,7 @@ void EntryAndExit() {
                DD_Price  = Ask ;
                Max_Price = Ask ;
                SL_Price = LowPrice ;
-               sString += Data_1( OrderCount, "Buy", Ask, Digits, LowPrice ) ;
+               if( TRUE ) sString += Data_1( OrderCount, "Buy", Ask, Digits, LowPrice ) ;
             }//end if
             BarStart = Bars ;
          }//end if
@@ -265,14 +278,7 @@ void EntryAndExit() {
       
       if( Signal == "Sell" && OrdersTotal() == 0 ) {
          ticket = Sell() ;
-         if( LineAlertMode == AlertOn ) {
-            LineAlert( LineSDToken, Symbol() + "\n"
-               + "MR - SELL\n\n"
-               //+ "DD = " + IntegerToString( input_DD_Pts ) + " pts\n"
-               //+ "DD bar = " + IntegerToString( input_DD_Bars ) + " bars"
-            ) ;
-         }//end if
-         
+        
          if( ticket != 0 ) {
             OrderCount++ ;
             CurrentOrder = "Sell" ;
@@ -280,7 +286,7 @@ void EntryAndExit() {
                DD_Price  = Bid ;
                Max_Price = Bid ;
                SL_Price = HighPrice ;
-               sString += Data_1( OrderCount, "Sell", Bid, Digits, HighPrice ) ;
+               if( TRUE ) sString += Data_1( OrderCount, "Sell", Bid, Digits, HighPrice ) ;
             }//end if
             BarStart = Bars ;
          }//end if
@@ -290,7 +296,7 @@ void EntryAndExit() {
          if( Signal == "CloseBuy" && CurrentOrder == "Buy" && OrdersTotal() != 0 ) {
             ticket = CloseAllBuy() ;
             if( ticket != 0 ) {
-               sString += Data_2( Bid, Digits ) ;
+               if( TRUE ) sString += Data_2( Bid, Digits ) ;
                CurrentOrder = "" ;
             }//end if
          }//end if
@@ -298,7 +304,7 @@ void EntryAndExit() {
          if( Signal == "CloseSell" && CurrentOrder == "Sell" && OrdersTotal() != 0 ) {
             ticket = CloseAllSell() ;
             if( ticket != 0 ) {
-               sString += Data_2( Ask, Digits ) ;
+               if( TRUE ) sString += Data_2( Ask, Digits ) ;
                CurrentOrder = "" ;
             }//end if
          }//end if
@@ -312,7 +318,7 @@ void EntryAndExit() {
          if( Signal == "CloseBuy" && CurrentOrder == "Buy" && OrdersTotal() != 0 ) {
             ticket = CloseAllBuy() ;
             if( ticket != 0 ) {
-               sString += Data_2( Bid, Digits ) ;
+               if( TRUE ) sString += Data_2( Bid, Digits ) ;
                CurrentOrder = "" ;
             }//end if
          }//end if
@@ -320,7 +326,7 @@ void EntryAndExit() {
          if( Signal == "CloseSell" && CurrentOrder == "Sell" && OrdersTotal() != 0 ) {
             ticket = CloseAllSell() ;
             if( ticket != 0 ) {
-               sString += Data_2( Ask, Digits ) ;
+               if( TRUE ) sString += Data_2( Ask, Digits ) ;
                CurrentOrder = "" ;
             }//end if
          }//end if
@@ -337,15 +343,11 @@ double FindHigh( int Bar1, int Bar3 ) {
    int i = 0 ;
 
    for( i = 0 ; i < Bar3 - Bar1 ; i++ ) {
-      //if( i > Bar4 - Bar3 ) {
-         H = iHigh( Symbol(), PERIOD_CURRENT, i ) ;
-         if( Max < H ) {
-            Max = H ;
-         }//end if
-         //PrintFormat( "%d ) High = %.5f", i, H ) ;
-      //}//end if
+      H = iHigh( Symbol(), PERIOD_CURRENT, i ) ;
+      if( Max < H ) {
+         Max = H ;
+      }//end if
    }//end if
-   //ExpertRemove() ;
    Output = Max ;
    return Output ;
 }//end function
@@ -384,16 +386,19 @@ void Capture_Close() {
    }//end if
 }//end function
 
+int Ord = 0 ;
+
 int Buy() {
    int Output = 0 ;
    int i = 0 ;
    C_Price = Order_Price ;
    if( OrdersTotal() == 0 ) {
-      Output = OrderSend( Symbol(), OP_BUY, 1.00, Ask, 0, 0, 0, "" ) ;
+      Output = OrderSend( Symbol(), OP_BUY, 0.01, Ask, 0, 0, 0, "" ) ;
       Order_Price = Ask ;
       Capture_Open() ;
    }//end if
    if( Output == -1 ) Output = 0 ;
+   Ord++ ;
    return Output ;
 }//end function
 
@@ -402,11 +407,12 @@ int Sell() {
    int i = 0 ;
    C_Price = Order_Price ;
    if( OrdersTotal() == 0 ) {
-      Output = OrderSend( Symbol(), OP_SELL, 1.00, Bid, 0, 0, 0, "" ) ;
+      Output = OrderSend( Symbol(), OP_SELL, 0.01, Bid, 0, 0, 0, "" ) ;
       Order_Price = Bid ;
       Capture_Open() ;
    }//end if
    if( Output == -1 ) Output = 0 ;
+   Ord++ ;
    return Output ;
 }//end function
 
@@ -463,7 +469,6 @@ double MinPrice = 9999999 ;
 
 string CurrentOrder = "" ;
 
-
 string CurrentTime() {
    string Output = "" ;
    int days     = TimeDay( CurrentCountryGMT( +7 ) ) ;
@@ -515,88 +520,7 @@ string Data_1( int Count, string Order, double Price, int D, double SL_Prices ) 
    return Output ;
 }//end function
 
-double HighBarPrice( int N = 4 ) {
-   double Output = 0 ;
-   double Max = -9999999 ;
-   for( int i = 0 ; i < N ; i++ ) {
-      if( iHigh( Symbol(), PERIOD_CURRENT, i ) > Max ) {
-         Max = iHigh( Symbol(), PERIOD_CURRENT, i ) ;
-      }//end if
-   }//end for
-   Output = Max ;
-   return Output ;
-}//end function
-
-double LowBarPrice( int N = 4 ) {
-   double Output = 0 ;
-   double Min = 9999999 ;
-   for( int i = 0 ; i < N ; i++ ) {
-      if( iLow( Symbol(), PERIOD_CURRENT, i ) < Min ) {
-         Min = iLow( Symbol(), PERIOD_CURRENT, i ) ;
-      }//end if
-   }//end for
-   Output = Min ;
-   return Output ;
-}//end function
-
 double SL_Price = 0 ;
-string Data_2_Old( double Price, int D ) {
-   string Output = "" ;
-   string Days = "" ;
-   if( TimeDayOfWeek( TimeCurrent() ) == 0 )       Days = "Sun" ;
-   else if( TimeDayOfWeek( TimeCurrent() ) == 1 )  Days = "Mon" ;
-   else if( TimeDayOfWeek( TimeCurrent() ) == 2 )  Days = "Tue" ;
-   else if( TimeDayOfWeek( TimeCurrent() ) == 3 )  Days = "Wed" ;
-   else if( TimeDayOfWeek( TimeCurrent() ) == 4 )  Days = "Thu" ;
-   else if( TimeDayOfWeek( TimeCurrent() ) == 5 )  Days = "Fri" ;
-   else if( TimeDayOfWeek( TimeCurrent() ) == 6 )  Days = "Sat" ;
-
-   double PL = 0 ;
-   double SL = Ask ;
-   /* Price = Exit Price */
-   if( C_Price == 0 ) C_Price = Order_Price ;
-   if( CurrentOrder == "Buy" ) {
-      PL = Price - Order_Price ;
-      //PL = C_Price - Price ;
-   } else if( CurrentOrder == "Sell" ) {
-      PL = Order_Price - Price ;
-      //PL = Price - C_Price ;
-   }//end if
-
-   double Highest = HighBarPrice( 4 ) ;
-   double Lowest  = LowBarPrice( 4 ) ;
-   double p_range = ( Highest - Lowest ) / Point ;
-   double n_range = ( ( Highest + p_range * Point ) - ( Lowest - p_range * Point ) ) / Point ;
-   
-   Output += 
-      /* Exit Date             */       IntegerToString( TimeDay( TimeCurrent() ) ) + "/" + IntegerToString( TimeMonth( TimeCurrent() ) ) + "/" + IntegerToString( TimeYear( TimeCurrent() ) ) + "\t"
-      /* Exit Time             */     + IntegerToString( TimeHour( TimeCurrent() ) ) + ":" + ( TimeMinute( TimeCurrent() ) <= 10 ? "0" : "" ) + IntegerToString( TimeMinute( TimeCurrent() ) ) + "\t"
-      /* Exit Price            */     + DoubleToStr( Price, D ) + "\t"
-      /* Exit BBW              */     + DoubleToStr( BBW(), 2 ) + "\t"
-      /* PL (pts)              */     + DoubleToStr( PL / Point, 0 ) + "\t"
-      /* PL (pts)              */     //+ DoubleToStr( Price, D ) + " - " + DoubleToStr( Order_Price, D ) + "\t"
-      /* DD Price              */     + DoubleToStr( DD_Price, D ) + "\t"
-      /* Holding Bar           */     + IntegerToString( Bars - BarStart ) + "\t"
-      /* Max Profit Price      */     + DoubleToStr( Max_Price, D ) + "\t"
-      /* Bars until max Profit */     + IntegerToString( Max_Bar - BarStart <= 0 ? 0 : Max_Bar - BarStart ) + "\t"
-      /* Bars until max Profit */     + IntegerToString( DD_Bar - BarStart <= 0 ? 0 : DD_Bar - BarStart ) + "\t"
-      /* Day (Number)          */     + IntegerToString( TimeDayOfWeek( TimeCurrent() ) ) + "\t"
-      /* Day (String)          */     + Days + "\t"
-      /* Highest 4 Bars        */     + DoubleToStr( Highest, D ) + "\t"
-      /* Lowest 4 Bars         */     + DoubleToStr( Lowest, D ) + "\t"
-      /* previous BEACH Range  */     + DoubleToStr( p_range , 0 ) + "\t"
-                                          
-      /* Project High 4 Bars   */     + DoubleToStr( Highest + p_range * Point , D ) + "\t"
-      /* Project Low  4 Bars   */     + DoubleToStr( Lowest - p_range * Point, D ) + "\t"
-      /* Project BEACH Range  */      + DoubleToStr( n_range , 0 ) + "\n"
-      
-      //+ IntegerToString( Bars - BarStart ) + "\t"
-      //+ DoubleToStr( MaxPrice, Digits ) + "\t"
-      //+ DoubleToStr( MinPrice, Digits ) + "\n"   ;
-   ;
-   return Output ;
-}//end function
-
 string Data_2( double Price, int D ) {
    string Output = "" ;
    string Days = "" ;
@@ -650,135 +574,8 @@ string Data_2( double Price, int D ) {
 
 double C_Price = 0 ;
 int first_case = 0 ;
-void MarkSto() {
-   int ticket = 0 ;
-   string s = "" ;
-   int sto_up = StoHigh ;
-   int sto_down = StoLow ;
-
-   /**
-      Get High
-         Low High Low ( 20 80 20 )
-      
-      Get Low
-         High Low High ( 80 20 80 )
-   */
-
-   if( LastBar != Bars ) {
-      double Sto_main   = iStochastic( Symbol(), PERIOD_CURRENT, 5, 3, 3, MODE_SMA,0,MODE_MAIN, 0 ) ;
-      double Sto_signal = iStochastic( Symbol(), PERIOD_CURRENT, 5, 3, 3, MODE_SMA,0,MODE_SIGNAL, 0 ) ;
-      
-      //----| GET HIGH : Low High Low ( 20 80 20 )
-      
-      //----| #1 : Mark Red1
-      if( step == 1 && Sto_main < sto_down && Sto_signal < sto_down ) {
-         DrawLine( "temp_bar_" + IntegerToString( obj ), Salmon ) ;
-         obj++ ;                 step = 2 ;     MarkBar1 = Bars ;
-         T1 = TimeCurrent() ;    bar_t1 = T1 ;
-      }//end if
-    
-      //----| #2 : Mark Green1
-      if( step == 2 && Sto_main > sto_up && Sto_signal > sto_up ) {
-         DrawLine( "temp_bar_" + IntegerToString( obj ), Lime ) ;
-         obj++ ;                 step = 3 ;     MarkBar2 = Bars ;
-         T2 = TimeCurrent() ;    bar_t2 = T2 ;
-      }//end if
-      
-      //----| #3 : Mark Red2
-      if( step == 3 && Sto_main < sto_down && Sto_signal < sto_down ) {
-         DrawLine( "temp_bar_" + IntegerToString( obj ), Salmon ) ;
-         obj++ ;                 step = 4 ;     MarkBar3 = Bars ;
-         T3 = TimeCurrent() ;    bar_t3 = T3 ;
-         
-         HighPrice = FindHigh( MarkBar1, MarkBar3 ) ;
-         DrawL( "High", T1, HighPrice, T3, HighPrice ) ;
-         DrawTempLine( "h", HighPrice ) ;
-         
-         if( LineAlertMode == AlertOn ) {
-            //LineAlert( LineSDToken, Symbol() + "\n"
-            //   + "High Price = " + DoubleToStr( HighPrice, Digits ) + "\n"
-            //   + "Low Price = " + DoubleToStr( LowPrice, Digits ) + "\n"
-            //) ;
-         }//end if
-         
-      }//end if
-      
-      //----| #4 : Mark Green2
-      if( step == 4 && Sto_main > sto_up && Sto_signal > sto_up ) {
-         DrawLine( "temp_bar_" + IntegerToString( obj ), Lime ) ;
-         obj++ ;                 step = 2 ;     MarkBar4 = Bars ;
-         T4 = TimeCurrent() ;    bar_t4 = T4 ;
-         
-         LowPrice  = FindLow( MarkBar2, MarkBar4 ) ;
-         DrawL( "Low", T2, LowPrice, T4, LowPrice ) ;
-         DrawTempLine( "l", LowPrice ) ;
-         
-         if( LineAlertMode == AlertOn ) {
-            LineAlert( LineSDToken, Symbol() + "\n"
-               + "High Price = " + DoubleToStr( HighPrice, Digits ) + "\n"
-               + "Low Price = " + DoubleToStr( LowPrice, Digits ) + "\n"
-            ) ;
-         }//end if
-         
-         
-         T1 = T3 ;
-         T2 = T4 ;
-         
-         MarkBar1 = MarkBar3 ;
-         MarkBar2 = MarkBar4 ;
-     }//end if
-      
-      //----| Comment
-      s += "Step = " + IntegerToString( step ) + "\n" ;
-      s += "High = " + DoubleToStr( HighPrice, Digits ) + "\n" ;
-      s += "Low = " + DoubleToStr( LowPrice, Digits ) + "\n" ;
-      //Comment( s ) ;
-      
-      
-      LastBar = Bars ;
-   }//end if
-}//end function
 
 int l_obj = 0 ;
-void DrawL( string obj_name, datetime t1, double p1, datetime t2, double p2 ) {
-   ObjectCreate( obj_name + IntegerToString( l_obj ), OBJ_TREND, 0, t1, p1, t2, p2 ) ;
-   ObjectSet(    obj_name + IntegerToString( l_obj ), OBJPROP_COLOR, White );          //Color of this Object
-   ObjectSet(    obj_name + IntegerToString( l_obj ), OBJPROP_STYLE, STYLE_SOLID );    //Set Line to Solid
-   ObjectSet(    obj_name + IntegerToString( l_obj ), OBJPROP_WIDTH, 1 );              //Set Width of Line
-   ObjectSet(    obj_name + IntegerToString( l_obj ), OBJPROP_RAY_RIGHT, FALSE );      //Set Ray
-   l_obj++ ;
-}//end function
-
-void DrawTempLine( string obj_name, double TargetPrice )  {
-   ObjectCreate(  obj_name + "_t_l", OBJ_HLINE, 0, 0, 0 );            //Declare HLine Object
-   ObjectSet(     obj_name + "_t_l", OBJPROP_COLOR, Pink );              //Color of this Object
-   ObjectSet(     obj_name + "_t_l", OBJPROP_STYLE, STYLE_DASH );    //Set Line to Solid
-   ObjectSet(     obj_name + "_t_l", OBJPROP_WIDTH, 1 );              //Set Width of Line
-   ObjectSet(     obj_name + "_t_l", OBJPROP_PRICE1, TargetPrice );   // Move
-}//end function
-
-bool LineAlert( string Token, string Message ) {
-   bool Output = FALSE ;
-   
-   string headers;
-   char data[], result[];
-   headers = "Authorization: Bearer "+Token+"\r\n	application/x-www-form-urlencoded\r\n";
-   ArrayResize(data,StringToCharArray("message="+Message,data,0,WHOLE_ARRAY,CP_UTF8)-1);
-
-   int res = WebRequest("POST", "https://notify-api.line.me/api/notify", headers, 0, data, data, headers);
-   
-   //PrintFormat( "res = %d", res ) ;
-   if( res == -1 ) { 
-      Print("Error in WebRequest. Error code  =",GetLastError()); 
-      Print("Add the address 'https://notify-api.line.me/api/notify' in the list of allowed URLs on tab 'Expert Advisors'","Error",MB_ICONINFORMATION); 
-   } else {
-      Output = TRUE ;
-   } //end if
-
-   return Output ;
-}//end function
-
-
 
 string   sFileName, sString;
 int      iHandle, iErrorCode, iInteger, iDecimalPlaces;

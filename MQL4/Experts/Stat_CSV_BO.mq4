@@ -1,98 +1,20 @@
 //+------------------------------------------------------------------+
-//|                              Copyright 2020, Thailand Fx Warrior |
-//|                                 http://www.thailandfxwarrior.com |
+//|                                                  Stat_CSV_BO.mq4 |
+//|                              Copyright 2022, Thailand Fx Warrior |
+//|                                https://www.thailandfxwarrior.com |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2020, Thailand Fx Warrior"
-#property link      "http://www.thailandfxwarrior.com"
+#property copyright "Copyright 2022, Thailand Fx Warrior"
+#property link      "https://www.thailandfxwarrior.com"
 #property version   "1.00"
 #property strict
-
-/**
-   web ->
-   https://notify-api.line.me/api/notify
-*/
-
-
-//*********************************************************************
-//*********************************************************************
-string web = "http://www.javit.me/auto-stat-update-for-me.php?key=741" ;
 
 #import "shell32.dll"
    int ShellExecuteW(int hWnd, string Verb, string File, string Parameter, string Path, int ShowCommand);
 #import
 
-#define INTERNET_FLAG_PRAGMA_NOCACHE    0x00000100 // Forces the request to be resolved by the origin server, even if a cached copy exists on the proxy.
-#define INTERNET_FLAG_NO_CACHE_WRITE    0x04000000 // Does not add the returned entity to the cache. 
-#define INTERNET_FLAG_RELOAD            0x80000000 // Forces a download of the requested file, object, or directory listing from the origin server, not from the cache. 
-
-
-#import "wininet.dll"
-int InternetOpenW(
-    string     sAgent,
-    int        lAccessType,
-    string     sProxyName="",
-    string     sProxyBypass="",
-    int     lFlags=0
-);
-int InternetOpenUrlW(
-    int     hInternetSession,
-    string     sUrl, 
-    string     sHeaders="",
-    int     lHeadersLength=0,
-    int     lFlags=0,
-    int     lContext=0 
-);
-int InternetReadFile(
-    int     hFile,
-    uchar  &   sBuffer[],
-    int     lNumBytesToRead,
-    int&     lNumberOfBytesRead
-);
-int InternetCloseHandle(
-    int     hInet
-);       
-#import
-
-int hSession_IEType;
-int hSession_Direct;
-int Internet_Open_Type_Preconfig = 0;
-int Internet_Open_Type_Direct = 1;
-
-int hSession(bool Direct) {
-    string InternetAgent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; Q312461)";
-    if (Direct)  { 
-        if (hSession_Direct == 0) {
-            hSession_Direct = InternetOpenW(InternetAgent, Internet_Open_Type_Direct, "0", "0", 0);
-        }//end if
-        return(hSession_Direct); 
-    } else  {
-        if (hSession_IEType == 0) {
-           hSession_IEType = InternetOpenW(InternetAgent, Internet_Open_Type_Preconfig, "0", "0", 0);
-        }//end if
-        return(hSession_IEType); 
-    }//end if
-}//end function
-
-string httpGET( string strUrl ) {
-   int handler  = hSession(false);
-   //int response = InternetOpenUrlW(handler, strUrl);
-   int response = InternetOpenUrlW( handler, strUrl, "", 0, INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_RELOAD );
-   int success = -9;
-   int ReadFile = -99 ;
-   if (response == 0) return( DoubleToStr( false ) );
-   uchar ch[100]; string toStr=""; int dwBytes, h=-1;
-   while( InternetReadFile(response, ch, 100, dwBytes) ) {
-      if ( dwBytes <= 0) break; toStr=toStr+CharArrayToString(ch, 0, dwBytes);
-   }//end while
-   success = InternetCloseHandle( response );
-   //PrintFormat( "---------> success = %d, response = %d", success, response ) ;
-   return toStr;
-}//end function
-
 string   sFileName, sString;
 int      iHandle, iErrorCode, iInteger, iDecimalPlaces;
 double   dDouble;
-
 
 bool fnReadFile() {
    iHandle = FileOpen(sFileName,FILE_CSV|FILE_READ);
@@ -102,10 +24,7 @@ bool fnReadFile() {
       else                    Print("Error reading file: ",iErrorCode);
       return(false);
    }//end if
-   //iInteger  = StrToInteger(FileReadString(iHandle));
    sString   = FileReadString(iHandle);
-   //dDouble   = StrToDouble(FileReadString(iHandle)); 
-   //PrintFormat( "-----------------| %s | %d, %s, %.5f", sFileName ,iInteger, sString, dDouble ) ;
    FileClose(iHandle) ;
    return(true) ;
 }//function
@@ -117,7 +36,6 @@ bool fnWriteFile() {
       Print("Error updating file: ",iErrorCode);
       return(false);
    }
-   //FileWrite(iHandle,iInteger,sString,DoubleToStr(dDouble,iDecimalPlaces));
    FileWrite( iHandle , sString );
    FileClose(iHandle);
    return(true);
@@ -143,10 +61,6 @@ string encrypt( string InputData , string Key ) export {
 string Trim( string input_string ){
    return StringTrimLeft( StringTrimRight( input_string ) );
 }//end function
-
-
-//*********************************************************************
-//*********************************************************************
 
 string EA_Name  = "BO_" ;
 string Versions = "V2.0.0 Update close by magic number" ;
@@ -300,6 +214,16 @@ void OnDeinit(const int reason) {
       //myIP = httpGET( web + sString ) ; sString = "" ;
    }//end if
    fnWriteFile() ;
+   
+   Sleep( 200 ) ;
+   
+   string Path = __PATH__ ;
+   
+   StringReplace( Path, __FILE__, "" ) ;
+   StringReplace( Path, "MQL4\\Experts\\", "" ) ;
+   StringReplace( Path, "ThailandFxWarrior\\", "" ) ;
+   StringReplace( Path, "trader_tum\\", "" ) ;
+   ShellExecuteW( 0, "edit", "" + Path + "tester\\files\\" + FileName, "", "", 1 );
 }//end function
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
@@ -345,14 +269,8 @@ double Order_Price = 0 ;
 int step = 1 ;
 int LastBar_x = 0 ;
 void OnTick() {
-
-   if( EntryMode == EntryOn ) Comment( "" ) ; //Comment( Versions + "\n----| Comment : " + cmmt + "\n----| Magic : " + IntegerToString( magicnumber ) ) ;
-   else Comment( "" ) ;
-   //MarkSto() ;
    SpeedMarkSto() ;
-   
    if( EntryMode == EntryOn ) EntryAndExit() ;
-   
    MarkBars() ;
 }//end function
 
@@ -584,17 +502,6 @@ void SpeedMarkSto() {
    
       HighPrice2 = SpeedFindHighPrice( 2 ) ;
       LowPrice2  = SpeedFindLowPrice( 2 ) ;
-   
-      DrawTempLine( "hhh", HighPrice, White ) ;
-      DrawTempLine( "lll", LowPrice, White ) ;
-      
-      //DrawTempLine( "hhh2", HighPrice2, Gray ) ;
-      //DrawTempLine( "lll2", LowPrice2, Gray ) ;
-      
-      DrawL( "h_tl", T2_High, HighPrice2, T1_High, HighPrice, DodgerBlue, TRUE ) ;
-      DrawL( "l_tl", T2_Low, LowPrice2, T1_Low, LowPrice, Salmon, TRUE ) ;
-      
-      ChartRedraw() ;
       LastBar = Bars ;
    }//end if
 }//end function
@@ -1070,9 +977,9 @@ string Data_2( double Price, int D ) {
       /* Bars until max Profit */     + IntegerToString( DD_Bar - BarStart ) + "\t"
       /* Day (Number)          */     + IntegerToString( TimeDayOfWeek( CurrentCountryGMT( +7 ) ) ) + "\t"
       /* Day (String)          */     + Days + "\t"
-      /* Win Rate (Profit/SL)  */     + DoubleToStr( 0,0 ) + "\t"
+      /* RRR                   */     + DoubleToStr( ( PL/Point>0? MathAbs(SL/Point) / (PL / Point) : 0 ),2 ) + "\t"
       /*  PL (pts)             */     + DoubleToStr( PL / Point, 0 ) + "\t"
-      /*  SL (pts)             */     + DoubleToStr( SL, D ) + "\t"
+      /*  SL (pts)             */     + DoubleToStr( SL / Point, D ) + "\t"
       /*  DD (pts)             */     + DoubleToStr( DD_pts / Point, 0 ) + "\t"
       /*  Max Profit (pts)     */     + DoubleToStr( Max_pts / Point, 0 ) + "\n"
       
@@ -1359,4 +1266,7 @@ bool LineAlert( string Token, string Message ) {
 
    return Output ;
 }//end function
+
+
+
 
