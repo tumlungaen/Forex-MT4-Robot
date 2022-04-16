@@ -275,6 +275,7 @@ void OnTick() {
 }//end function
 
 void MarkBars() {
+
    if( CurrentOrder == "Buy" ) {
       if( Ask > Max_Price && Ask > Order_Price ) {
          Max_Price = Ask ;
@@ -298,6 +299,7 @@ void MarkBars() {
          DD_Bar = Bars ;
       }//end if
    }//end if
+   
 }//end function
 
 void SplitTimeRange( string &TimeRangeSet[], string TimeRangeString, string Split = "-" )  {
@@ -514,62 +516,64 @@ void EntryAndExit() {
       
       //-------| ENTRY & EXIT
       if( HighPrice != -9999999 || LowPrice != 9999999 ) {
+      
+         //----| Set close price to variable
          double C       = iClose( Symbol(), PERIOD_CURRENT, 0 ) ;
          double Last_C  = iClose( Symbol(), PERIOD_CURRENT, 1 ) ;
          double Last_CC = iClose( Symbol(), PERIOD_CURRENT, 2 ) ;
-         if( CurrentOrder == "Buy" ) {
-            if( iClose( Symbol(), PERIOD_CURRENT, 0 ) > MaxPrice ) {
-               MaxPrice = iClose( Symbol(), PERIOD_CURRENT, 0 ) ;
-            }//end if
-            if( iClose( Symbol(), PERIOD_CURRENT, 0 ) < MinPrice ) {
-               MinPrice = iClose( Symbol(), PERIOD_CURRENT, 0 ) ;
-            }//end if
-         }//end if
          
-         if( CurrentOrder == "Sell" ) {
-            if( iClose( Symbol(), PERIOD_CURRENT, 0 ) < MaxPrice ) {
-               MaxPrice = iClose( Symbol(), PERIOD_CURRENT, 0 ) ;
-            }//end if
-            if( iClose( Symbol(), PERIOD_CURRENT, 0 ) > MinPrice ) {
-               MinPrice = iClose( Symbol(), PERIOD_CURRENT, 0 ) ;
-            }//end if
-         }//end if
+         //----| Set min & max price, when current order = buy
+         //if( CurrentOrder == "Buy" ) {
+         //   if( iClose( Symbol(), PERIOD_CURRENT, 0 ) > MaxPrice ) {
+         //      MaxPrice = iClose( Symbol(), PERIOD_CURRENT, 0 ) ;
+         //   }//end if
+         //   if( iClose( Symbol(), PERIOD_CURRENT, 0 ) < MinPrice ) {
+         //      MinPrice = iClose( Symbol(), PERIOD_CURRENT, 0 ) ;
+         //   }//end if
+         //}//end if
          
+         //----| Set min & max price, when current order = sell
+         //if( CurrentOrder == "Sell" ) {
+         //   if( iClose( Symbol(), PERIOD_CURRENT, 0 ) < MaxPrice )
+         //      MaxPrice = iClose( Symbol(), PERIOD_CURRENT, 0 ) ;
+         //   if( iClose( Symbol(), PERIOD_CURRENT, 0 ) > MinPrice )
+         //      MinPrice = iClose( Symbol(), PERIOD_CURRENT, 0 ) ;
+         //}//end if
+         
+         //----| Entry Buy : Active
          if( C > HighPrice && Last_C > HighPrice && Last_CC < HighPrice && LowPrice != 9999999 && HighPrice != -9999999 ) {
-            if( EntryMode == EntryOn ) CloseAllSell() ;
-            if( TimeHandling() ) if( EntryMode == EntryOn ) ticket = Buy() ;
             
-            //------------------------------------------------------------------------
+            //----| Close all sell & entry buy
+            CloseAllSell() ;
+            ticket = Buy() ;
+            
+            //----| Start tracking order buy
             if( ticket != 0 ) {
                OrderCount++ ;
-               //CurrentOrder = "Buy" ;
                
-               if( OrderCount == 1 ) {
-                  MaxPrice = -9999999 ;
-                  MinPrice = 9999999 ;
+               if( OrderCount == 1 ) { //----| when appear first order
+                  //MaxPrice = -9999999 ;
+                  //MinPrice = 9999999 ;
                   
                   DD_Price  = Ask ;
                   Max_Price = Ask ;
                   
-                  SL_Price = LowPrice ;
                   CurrentOrder = "Buy" ;
+                  SL_Price = LowPrice ;
                   sString += Data_1( OrderCount, "Buy", Bid, Digits, LowPrice ) ;
                   
-               //} else if( OrderCount % 2 == 0 ) {
-               } else {
-                  //----| CLOSE SELL
+               } else { //----| When more than first order
+               
+                  //----| Already have sell order, close it, then entry buy
                   sString += Data_2( Ask, Digits ) ;
-                  //PrintFormat( web + sString ) ;
-                  //myIP = httpGET( web + sString ) ; sString = "" ;
                   
-                  //ExpertRemove() ;
+                  //----| Entry buy
                   CurrentOrder = "Buy" ;
-                  //----| ENTRY BUY
                   SL_Price = LowPrice ;
                   sString += Data_1( OrderCount, "Buy", Bid, Digits, LowPrice ) ;
                   
-                  MaxPrice = -9999999 ;
-                  MinPrice = 9999999 ;
+                  //MaxPrice = -9999999 ;
+                  //MinPrice = 9999999 ;
                   
                   DD_Price  = Ask ;
                   Max_Price = Ask ;
@@ -579,19 +583,12 @@ void EntryAndExit() {
             }//end if
             //------------------------------------------------------------------------
             
-            if( LastHigh != HighPrice && HighPrice != -9999999 ) {
-               //if( LineAlertMode == AlertOn ) {
-               //   LineAlert( LineSDToken, Symbol() + "\n"
-               //         + "High - Buy\n\n"
-               //         + "H Price = " + DoubleToStr( HighPrice, Digits ) + "\n"
-               //         + "L Price = " + DoubleToStr( LowPrice, Digits ) + "\n\n"
-               //         //+ "DD = " + IntegerToString( input_DD_Pts ) + " pts\n"
-               //         //+ "DD bar = " + IntegerToString( input_DD_Bars ) + " bars"
-               //      ) ;
-               //}//end if
-               LastHigh = HighPrice ;
-            }//end if
+            if( LastHigh != HighPrice && HighPrice != -9999999 ) LastHigh = HighPrice ;
+            
          } else if( C < LowPrice && Last_C < LowPrice && Last_CC > LowPrice && LowPrice != 9999999 && HighPrice != -9999999 ) {
+            
+            //--------| Case : Sell
+            
             if( EntryMode == EntryOn ) CloseAllBuy() ;
             if( TimeHandling() ) if( EntryMode == EntryOn ) ticket = Sell() ;
             //------------------------------------------------------------------------
@@ -600,8 +597,8 @@ void EntryAndExit() {
                //CurrentOrder = "Sell" ;
                
                if( OrderCount == 1 ) {
-                  MaxPrice = 9999999 ;
-                  MinPrice = -9999999 ;
+                  //MaxPrice = 9999999 ;
+                  //MinPrice = -9999999 ;
                   
                   DD_Price  = Bid ;
                   Max_Price = Bid ;
@@ -620,8 +617,8 @@ void EntryAndExit() {
                   SL_Price = HighPrice ;
                   sString += Data_1( OrderCount, "Sell", Ask, Digits, HighPrice ) ;
                   
-                  MaxPrice = 9999999 ;
-                  MinPrice = -9999999 ;
+                  //MaxPrice = 9999999 ;
+                  //MinPrice = -9999999 ;
                   
                   DD_Price  = Bid ;
                   Max_Price = Bid ;
@@ -631,16 +628,6 @@ void EntryAndExit() {
             }//end if
             //------------------------------------------------------------------------
             if( LastLow != LowPrice ) {
-               //if( LineAlertMode == AlertOn ) {
-               //   LineAlert( LineSDToken, Symbol() + "\n"
-               //         + "Low - SELL\n\n"
-               //         + "H Price = " + DoubleToStr( HighPrice, Digits ) + "\n"
-               //         + "L Price = " + DoubleToStr( LowPrice, Digits ) + "\n\n"
-               //         //+ "DD = " + IntegerToString( input_DD_Pts ) + " pts\n"
-               //         //+ "DD bar = " + IntegerToString( input_DD_Bars ) + " bars"
-               //         //+ AccountServer()
-               //      ) ;
-               //}//end if
                LastLow = LowPrice ;
             }//end if
          }//end if
@@ -827,8 +814,8 @@ double LastLow1 = 0 ;
 int BarStart = 0 ;
 int BarStop = 0 ;
 int OrderCount = 0 ;
-double MaxPrice = -9999999 ;
-double MinPrice = 9999999 ;
+//double MaxPrice = -9999999 ;
+//double MinPrice = 9999999 ;
 
 string CurrentOrder = "" ;
 
@@ -873,8 +860,8 @@ datetime CurrentCountryGMT( int YourCountryGMTOffset ) {
    return ( CountyGMTOffset + TimeGMT() );
 }//end function
 
- int BB_Period = 110 ;
- double BB_SD  = 2.5 ;
+ int BB_Period = 50 ;
+ double BB_SD  = 2.0 ;
  double HL_Entry = 0 ;
 string Data_1( int Count, string Order, double Price, int D, double SL_Prices ) {
    string Output = "" ;
@@ -888,14 +875,14 @@ string Data_1( int Count, string Order, double Price, int D, double SL_Prices ) 
    else if( TimeDayOfWeek( TimeCurrent() ) == 5 )  Days = "Fri" ;
    else if( TimeDayOfWeek( TimeCurrent() ) == 6 )  Days = "Sat" ;
 
-
    int delay = 1 ;
    double UBand2SD = iBands( Symbol(), PERIOD_CURRENT, BB_Period, BB_SD, 0, PRICE_CLOSE, MODE_UPPER, delay ) ;
    double LBand2SD = iBands( Symbol(), PERIOD_CURRENT, BB_Period, BB_SD, 0, PRICE_CLOSE, MODE_LOWER, delay ) ;
-   double BBP = 0 ; //NormalizeDouble( ( ( Price - LBand2SD ) / ( UBand2SD - LBand2SD ) ) * 100, 2 ) ;
+   double BBP = NormalizeDouble( ( ( Price - LBand2SD ) / ( UBand2SD - LBand2SD ) ) * 100, 2 ) ;
 
    Output += 
-      /* No          */     IntegerToString( Count ) + "\t"
+      ///* No          */     IntegerToString( Count ) + "\t"
+      /* No          */     "Ord"+ IntegerToString( Count ) + "\t"
       /* Tactir      */     + "Breakout\t"
       /* Symbol      */     + Symbol() + "\t"
       /* TF          */     + IntegerToString( Period() ) + "\t"
@@ -934,9 +921,7 @@ string Data_2( double Price, int D ) {
    double DD_P = 0 ;
    double Max_P = 0 ;
    double PL_P = 0 ;
-   
-   //PrintFormat( "-----| [ %s ] Price = %.5f", CurrentOrder, Price ) ;
-   
+
    /* Price = Exit Price */
    if( CurrentOrder == "Buy" ) {
       PL = C_Price - Price ;
@@ -949,8 +934,6 @@ string Data_2( double Price, int D ) {
       DD_P = ( ( DD_Price - L_Price ) / Range ) * 100 ;
       Max_P = ( ( Max_Price - L_Price ) / Range ) * 100 ;
       PL_P = ( ( Price - L_Price ) / Range ) * 100 ;
-      //PrintFormat( "*******  ( %.3f - %.3f ) - ( %.3f - %.3f ) = %.2f", Price, L_Price, H_Price, L_Price, PL_P ) ;
-      //ExpertRemove() ;
    } else if( CurrentOrder == "Sell" ) {
       PL = Price - C_Price ;
       SL = C_Price - SL_Price ;
@@ -974,12 +957,12 @@ string Data_2( double Price, int D ) {
       /* Holding Bar           */     + IntegerToString( Bars - BarStart ) + "\t"
       /* Max Profit Price      */     + DoubleToStr( Max_Price, D ) + "\t"
       /* Bars until max Profit */     + IntegerToString( Max_Bar - BarStart ) + "\t"
-      /* Bars until max Profit */     + IntegerToString( DD_Bar - BarStart ) + "\t"
+      /* Bars until DD         */     + IntegerToString( DD_Bar - BarStart ) + "\t"
       /* Day (Number)          */     + IntegerToString( TimeDayOfWeek( CurrentCountryGMT( +7 ) ) ) + "\t"
       /* Day (String)          */     + Days + "\t"
       /* RRR                   */     + DoubleToStr( ( PL/Point>0? MathAbs(SL/Point) / (PL / Point) : 0 ),2 ) + "\t"
       /*  PL (pts)             */     + DoubleToStr( PL / Point, 0 ) + "\t"
-      /*  SL (pts)             */     + DoubleToStr( SL / Point, D ) + "\t"
+      /*  SL (pts)             */     + DoubleToStr( SL / Point, 0 ) + "\t"
       /*  DD (pts)             */     + DoubleToStr( DD_pts / Point, 0 ) + "\t"
       /*  Max Profit (pts)     */     + DoubleToStr( Max_pts / Point, 0 ) + "\n"
       
@@ -1251,7 +1234,7 @@ bool LineAlert( string Token, string Message ) {
    
    string headers;
    char data[], result[];
-   headers = "Authorization: Bearer "+Token+"\r\n	application/x-www-form-urlencoded\r\n";
+   headers = "Authorization: Bearer "+Token+"\r\n  application/x-www-form-urlencoded\r\n";
    ArrayResize(data,StringToCharArray("message="+Message,data,0,WHOLE_ARRAY,CP_UTF8)-1);
 
    int res = WebRequest("POST", "https://notify-api.line.me/api/notify", headers, 0, data, data, headers);
